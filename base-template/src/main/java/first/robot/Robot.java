@@ -12,6 +12,11 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.wpilib.framework.OpModeRobot;
 
+import com.google.flatbuffers.Constants;
+
+import first.robot.constants.RobotConstants;
+import first.robot.generated.TunerConstants;
+
 /**
  * The methods in this class are called automatically as described in the
  * OpModeRobot documentation.
@@ -24,6 +29,11 @@ import org.wpilib.framework.OpModeRobot;
  * project.
  */
 public class Robot extends LoggedOpModeRobot {
+  // Subsystems
+  private final Drive drive;
+
+
+
   /**
    * This function is run when the robot is first started up and should be used
    * for any
@@ -45,6 +55,43 @@ public class Robot extends LoggedOpModeRobot {
     Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may
                     // be added.
 
+    switch (RobotConstants.currentMode) {
+      case REAL:
+        // Real robot, instantiate hardware IO implementations
+        // ModuleIOTalonFX is intended for modules with TalonFX drive, TalonFX turn, and
+        // a CANcoder
+        drive =
+            new Drive(
+                new GyroIOPigeon2(),
+                new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                new ModuleIOTalonFX(TunerConstants.FrontRight),
+                new ModuleIOTalonFX(TunerConstants.BackLeft),
+                new ModuleIOTalonFX(TunerConstants.BackRight));
+        break;
+
+      case SIM:
+        // Sim robot, instantiate physics sim IO implementations
+        drive =
+            new Drive(
+                new GyroIO() {},
+                new ModuleIOSim(TunerConstants.FrontLeft),
+                new ModuleIOSim(TunerConstants.FrontRight),
+                new ModuleIOSim(TunerConstants.BackLeft),
+                new ModuleIOSim(TunerConstants.BackRight));
+        break;
+
+      default:
+        // Replayed robot, disable IO implementations
+        drive =
+            new Drive(
+                new GyroIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {});
+        break;
+    }
+    
   }
 
   /** This function is called exactly once when the DS first connects. */
